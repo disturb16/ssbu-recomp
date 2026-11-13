@@ -684,7 +684,7 @@ static void sec_display(int cw, int ch) {
         } else if (hz > 30) ImGui::TextDisabled("Screen %.0f Hz: locked, %d refresh%s per game frame.", hz, k, k > 1 ? "es" : "");
     }
 #ifdef _WIN32
-    help("F11 also switches between the window and borderless at any time. Fullscreen = borderless and always on top (no display mode change).");
+    help("F11 also switches between the window and borderless at any time, Alt+Enter between the window and fullscreen. Fullscreen = borderless and always on top (no display mode change).");
 #else
     help("Borderless = a window without a frame over the whole screen; fullscreen = the desktop's fullscreen (no display mode change).");
 #endif
@@ -1376,6 +1376,7 @@ static int online_differs(void) {
 /* Gameplay: the input delay of online fights (graphics.ini input_delay; net_session.c reads it at each match's handshake, both
  * games take the larger of the two players' values) and every fighter and stage unlocked (unlock_all, unlock_all.c; read at start) */
 extern "C" int rbn_delay(void);
+extern "C" int rbn_on(void);
 extern "C" void gfx_fight_sound_chosen(void); extern "C" int gfx_fight_sound_was_auto_off(void);
 static void sec_gameplay(void) {
     /* (2026-11-05, owner) Auto at every start (graphics.ini is not read or written for it); a player may pick a number for
@@ -1411,8 +1412,11 @@ static void sec_gameplay(void) {
     }
     ImGui::SameLine(); ImGui::Text("Sound in online fights (music and effects)");
     if (gfx_fight_sound_was_auto_off()) ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.2f, 1), "Turned OFF by the game for this session: your PC was at its limit in a fight. Press the button to turn it on again.");
+    if (fs && rbn_on() && !gfx_rb_delay_only()) ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.2f, 1), "Rollback matches: sound on is experimental; it can desync a match. The fallback then leaves the match (player 1 walks off) instead of closing the game. Turn this OFF for reliable online play.");
     help("ON (the default): you hear the music and the sound effects in online rollback fights. OFF: the fights are silent "
-         "(try it if a fight stutters on your PC). Only your game: the other player can choose differently. "
+         "(the audio threads are held; the reliable choice for rollback). ON keeps the audio thread running beside the ring "
+         "and can desync a match; the fallback then leaves the match (player 1 walks off) instead of closing the game. "
+         "Only your game: the other player can choose differently. "
          "Used from your next match. Music and effects volume apart: the game's own Options > Sound.");
     ImGui::Separator();
     if (onoff("unlock", S.unlock != 0, true)) { S.unlock = !S.unlock; ini("unlock_all", k_onoff[S.unlock]); printf("menu: unlock all fighters and stages: %s (at the next start)\n", k_onoff[S.unlock]); fflush(stdout); }
